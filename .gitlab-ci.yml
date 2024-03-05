@@ -1,0 +1,2 @@
+include:
+  - https://gitlab.thewitslab.com/api/v4/projects/391/repository/files/node.yml/raw?ref=main&private_token=$Boilerplate_Pipeline&.yaml

@@ -6,7 +6,7 @@ if docker ps -a --filter "name=vault" | grep -q 'Up'; then
 else
     echo "Starting Vault container..."
     docker-compose up vault -d
-    # bash setup_vault.sh docker-compose.yml vault
+    bash setup_vault.sh docker-compose.yml vault
 fi
 
 # Correctly extract unseal keys from keys.txt

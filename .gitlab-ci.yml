@@ -1,2 +1,58 @@
 include:
   - https://gitlab.thewitslab.com/api/v4/projects/391/repository/files/node.yml/raw?ref=main&private_token=$Boilerplate_Pipeline&.yaml
+
+after_script:
+  script:
+    - ARECORD=$(echo $ARECORD | tr '[A-Z]' '[a-z]')
+    - COMPOSE_DEV=$(echo $COMPOSE_DEV | tr '[A-Z]' '[a-z]')
+    - |
+        api=$(curl -X GET "https://gitlab.thewitslab.com/api/v4/projects/$CI_PROJECT_ID" -H "Private-Token: $GITLAB_ACCESS_TOKEN")
+        CLIENT_NAME=$(echo $api | jq '.namespace.name' | sed 's/"//g' | sed s/WIL-//g | sed s/WIL_//g | tr '[A-Z]' '[a-z]' | sed 's/_/-/g')
+        inputString=$(echo $CI_PROJECT_NAME | tr '[A-Z]' '[a-z]' | sed 's/_/-/g')
+        original_string=$inputString
+        original_string=$(echo $original_string | tr '[A-Z]' '[a-z]')
+        if [[ $original_string = wil* ]];then
+            inputString=$(echo $original_string | sed 's/wil//')
+        fi
+        NAME="${CLIENT_NAME%%-*}"
+        NEW_CLIENT_NAME=$(echo $CLIENT_NAME | sed 's/'$NAME-'//g')
+        NEW_NAME="${NEW_CLIENT_NAME%%-*}"
+        project_name=$(echo $inputString | cut -d'-' -f1 -f2)
+        if [[ $NEW_NAME == $project_name  ]];then
+          PROJECT_NAME=$project_name
+        else
+          validation=$(echo $NEW_NAME | cut -d'-' -f1)
+          validation_Repo=$(echo $project_name | cut -d'-' -f1)
+          if [[ $validation ==  $validation_Repo ]];then
+          project_name=$(echo $project_name | sed 's/'$validation-'//g')
+          fi
+          PROJECT_NAME=$NEW_NAME-$project_name
+        fi
+    - |
+        if [[ $PROJECT_NAME == *"--"* ]];then
+        PROJECT_NAME=$(echo $PROJECT_NAME | sed 's/-//')
+        fi
+        if [[ $PROJECT_NAME == "-"* ]];then
+                PROJECT_NAME=$(echo $PROJECT_NAME | sed 's/-//')
+        fi
+    - |
+        if [[ ! -z $DOMAIN ]];then
+            PROJECT_NAME=$DOMAIN
+            echo "Deployment is going through Custom domain"
+        fi
+    - |
+      /usr/local/bin/sshpass -p $WIL_DEV_PASSWORD ssh -tt $DEV_SERVER_USER@$DEV_SERVER_HOST "
+        if [[ -d "WIL-"$CI_PROJECT_NAME"-dev" ]]; then
+          cd /Users/$DEV_SERVER_USER/"WIL-"$CI_PROJECT_NAME"-dev"
+          cd && rm -rf "WIL-"$CI_PROJECT_NAME"-dev"
+        fi "
+
+    - /usr/local/bin/sshpass -p $WIL_DEV_PASSWORD ssh -tt $DEV_SERVER_USER@$DEV_SERVER_HOST "mkdir "WIL-"$CI_PROJECT_NAME"-dev""
+    - sshpass -p $WIL_DEV_PASSWORD scp -r * .env $DEV_SERVER_USER@$DEV_SERVER_HOST:/Users/$DEV_SERVER_USER/"WIL-"$CI_PROJECT_NAME"-dev"
+    - /usr/local/bin/sshpass -p $WIL_DEV_PASSWORD ssh -tt $DEV_SERVER_USER@$DEV_SERVER_HOST " cd /Users/$DEV_SERVER_USER/"WIL-"$CI_PROJECT_NAME"-dev" && chmod +x start.sh && ./start.sh "
+    - /usr/local/bin/sshpass -p $WIL_DEV_PASSWORD ssh -tt $DEV_SERVER_USER@$DEV_SERVER_HOST " sudo -kS <<< $WIL_DEV_PASSWORD bash -c '( cd /Users/$DEV_SERVER_USER/pipeline_utility/apache-automation-utility && chmod +x apache_arecord_backend.sh && ./apache_arecord_backend.sh $PROJECT_NAME"-dev" $VAULT_TOKEN $PORT_DEV )'"
+      # if [[ $ARECORD == true ]];then
+      #     echo "Running apache_arecord script."
+      #     /usr/local/bin/sshpass -p $WIL_DEV_PASSWORD ssh -tt $DEV_SERVER_USER@$DEV_SERVER_HOST " sudo -kS <<< $WIL_DEV_PASSWORD bash -c '( cd /Users/$DEV_SERVER_USER/pipeline_utility/apache-automation-utility && chmod +x apache_arecord_backend.sh && ./apache_arecord_backend.sh $PROJECT_NAME"-dev" $VAULT_TOKEN $PORT_DEV )'"
+      # fi
+    - echo "Docker compose up for dev complete"

@@ -42,10 +42,10 @@ echo "Updating .env file with new VAULT_TOKEN value..."
 sed -i '' "s/^VAULT_TOKEN=.*/VAULT_TOKEN=$VAULT_TOKEN/" .env
 cat .env
 docker-compose down identity
-docker-compose up -d -e VAULT_TOKEN=$VAULT_TOKEN identity
+docker-compose up -d identity
 
 # Start the identity and credential schema services
 echo "Starting identity and credential schema services..."
-docker-compose up credential schema -d
+docker-compose up credential schema nginx -d
 
 echo "Restart process completed."

@@ -15,7 +15,7 @@ services:
       - IPC_LOCK
     command: vault server -config=/vault/config/vault.json
     ports:
-      - 8200:8200
+      - 1076:8200
     healthcheck:
       test:
         [
@@ -29,7 +29,7 @@ services:
     # image: ghcr.io/sunbird-rc/sunbird-rc-identity-service:test
     image: ghcr.io/sunbird-rc/sunbird-rc-identity-service:v2.0.0-rc1
     ports:
-      - "3332:3332"
+      - "1075:3332"
     depends_on:
       vault:
         condition: service_healthy
@@ -56,7 +56,7 @@ services:
     # image: ghcr.io/sunbird-rc/sunbird-rc-credential-schema:v2.0.0-beta4
     image: ghcr.io/sunbird-rc/sunbird-rc-credential-schema:v2.0.0-rc1
     ports:
-      - "3333:3333"
+      - "1074:3333"
     depends_on:
       db:
         condition: service_healthy
@@ -76,7 +76,7 @@ services:
     # image: ghcr.io/sunbird-rc/sunbird-rc-credentials-service:v2.0.0-beta4
     image: ghcr.io/sunbird-rc/sunbird-rc-credentials-service:v2.0.0-rc1
     ports:
-      - "3000:3000"
+      - "1073:3000"
     depends_on:
       db:
         condition: service_healthy
@@ -99,7 +99,7 @@ services:
   db:
     image: postgres:12.1-alpine
     ports:
-      - 5432:5432
+      - 1072:5432
     environment:
       - POSTGRES_USER=${POSTGRES_USER}
       - POSTGRES_PASSWORD=${POSTGRES_PASSWORD}
@@ -134,7 +134,7 @@ services:
       - webhook_enabled=false
       - manager_type=DefinitionsManager
     ports:
-      - "8081:8081"
+      - "1071:8081"
     depends_on:
       db:
         condition: service_healthy
@@ -151,7 +151,7 @@ services:
     image: mosip-nginx
     build: .
     ports:
-      - "80:80"
+      - "1070:80"
     depends_on:
       registry:
         condition: service_healthy

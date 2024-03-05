@@ -1,4 +1,4 @@
-version: '2.4'
+version: "2.4"
 
 services:
   vault:
@@ -26,7 +26,8 @@ services:
       timeout: 5s
       retries: 3
   identity:
-    image: ghcr.io/sunbird-rc/sunbird-rc-identity-service:v2.0.0-beta2
+    # image: ghcr.io/sunbird-rc/sunbird-rc-identity-service:test
+    image: ghcr.io/sunbird-rc/sunbird-rc-identity-service:v2.0.0-rc1
     ports:
       - "3332:3332"
     depends_on:
@@ -47,13 +48,13 @@ services:
       - ENABLE_AUTH=${ENABLE_AUTH}
       - WEB_DID_BASE_URL=${WEB_DID_BASE_URL}
     healthcheck:
-      test:
-        [ "CMD-SHELL", "curl -f http://localhost:3332/health || exit 1" ]
+      test: ["CMD-SHELL", "curl -f http://localhost:3332/health || exit 1"]
       interval: 10s
       timeout: 5s
       retries: 5
   schema:
-    image: ghcr.io/sunbird-rc/sunbird-rc-credential-schema:v2.0.0-beta1
+    # image: ghcr.io/sunbird-rc/sunbird-rc-credential-schema:v2.0.0-beta4
+    image: ghcr.io/sunbird-rc/sunbird-rc-credential-schema:v2.0.0-rc1
     ports:
       - "3333:3333"
     depends_on:
@@ -67,13 +68,13 @@ services:
       - JWKS_URI=${JWKS_URI}
       - ENABLE_AUTH=${ENABLE_AUTH}
     healthcheck:
-      test:
-        [ "CMD-SHELL", "curl -f http://localhost:3333/health || exit 1" ]
+      test: ["CMD-SHELL", "curl -f http://localhost:3333/health || exit 1"]
       interval: 10s
       timeout: 5s
       retries: 5
   credential:
-    image: ghcr.io/sunbird-rc/sunbird-rc-credentials-service:v2.0.0-beta2
+    # image: ghcr.io/sunbird-rc/sunbird-rc-credentials-service:v2.0.0-beta4
+    image: ghcr.io/sunbird-rc/sunbird-rc-credentials-service:v2.0.0-rc1
     ports:
       - "3000:3000"
     depends_on:
@@ -91,8 +92,7 @@ services:
       - JWKS_URI=${JWKS_URI}
       - ENABLE_AUTH=${ENABLE_AUTH}
     healthcheck:
-      test:
-        [ "CMD-SHELL", "curl -f http://localhost:3000/health || exit 1" ]
+      test: ["CMD-SHELL", "curl -f http://localhost:3000/health || exit 1"]
       interval: 10s
       timeout: 5s
       retries: 5
@@ -106,7 +106,7 @@ services:
     volumes:
       - ./db-data:/var/lib/postgresql/data
     healthcheck:
-      test: [ "CMD-SHELL", "pg_isready -U postgres" ]
+      test: ["CMD-SHELL", "pg_isready -U postgres"]
       interval: 10s
       timeout: 5s
       retries: 5
@@ -134,15 +134,15 @@ services:
       - webhook_enabled=false
       - manager_type=DefinitionsManager
     ports:
-      - '8081:8081'
+      - "8081:8081"
     depends_on:
       db:
         condition: service_healthy
     healthcheck:
       test:
         [
-          'CMD-SHELL',
-          'wget -nv -t1 --spider http://localhost:8081/health || exit 1',
+          "CMD-SHELL",
+          "wget -nv -t1 --spider http://localhost:8081/health || exit 1",
         ]
       interval: 30s
       timeout: 10s
@@ -151,7 +151,7 @@ services:
     image: mosip-nginx
     build: .
     ports:
-      - '80:80'
+      - "80:80"
     depends_on:
       registry:
         condition: service_healthy

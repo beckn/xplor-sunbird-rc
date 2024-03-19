@@ -16,7 +16,7 @@ after_script:
         NAME="${CLIENT_NAME%%-*}"
         NEW_CLIENT_NAME=$(echo $CLIENT_NAME | sed 's/'$NAME-'//g')
         NEW_NAME="${NEW_CLIENT_NAME%%-*}"
-        project_name=$(echo $inputString | cut -d'-' -f1 -f2)
+        project_name=$(echo $inputString | cut -d'-' -f1-2)
         if [[ $NEW_NAME == $project_name  ]];then
           PROJECT_NAME=$project_name
         else

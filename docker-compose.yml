@@ -3,10 +3,12 @@ version: "2.4"
 services:
   vault:
     image: vault:1.13.3
+    platform: linux/amd64
     restart: always
     volumes:
       - ./vault.json:/vault/config/vault.json
-      - /Users/wiladmin/Desktop/WIL-sunbird/vault-data:/vault/file
+      - /home/ubuntu/ALL_VOLUMES/vault-data:/vault
+
     environment:
       - VAULT_ADDR=${VAULT_ADDR}
       - VAULT_API_ADDR=${VAULT_API_ADDR}
@@ -15,7 +17,7 @@ services:
       - IPC_LOCK
     command: vault server -config=/vault/config/vault.json
     ports:
-      - 1076:8200
+      - 8200:8200
     healthcheck:
       test:
         [
@@ -28,8 +30,9 @@ services:
   identity:
     # image: ghcr.io/sunbird-rc/sunbird-rc-identity-service:test
     image: ghcr.io/sunbird-rc/sunbird-rc-identity-service:v2.0.0-rc1
+    platform: linux/amd64
     ports:
-      - "1075:3332"
+      - "3332:3332"
     depends_on:
       vault:
         condition: service_healthy
@@ -47,16 +50,19 @@ services:
       - JWKS_URI=${JWKS_URI}
       - ENABLE_AUTH=${ENABLE_AUTH}
       - WEB_DID_BASE_URL=${WEB_DID_BASE_URL}
+    restart: always
     healthcheck:
       test: ["CMD-SHELL", "curl -f http://localhost:3332/health || exit 1"]
       interval: 10s
       timeout: 5s
       retries: 5
+
   schema:
     # image: ghcr.io/sunbird-rc/sunbird-rc-credential-schema:v2.0.0-beta4
     image: ghcr.io/sunbird-rc/sunbird-rc-credential-schema:v2.0.0-rc1
+    platform: linux/amd64
     ports:
-      - "1074:3333"
+      - "3333:3333"
     depends_on:
       db:
         condition: service_healthy
@@ -72,18 +78,21 @@ services:
       interval: 10s
       timeout: 5s
       retries: 5
+    restart: always
   credential:
     # image: ghcr.io/sunbird-rc/sunbird-rc-credentials-service:v2.0.0-beta4
     image: ghcr.io/sunbird-rc/sunbird-rc-credentials-service:v2.0.0-rc1
+    platform: linux/amd64
     ports:
-      - "1073:3000"
-    depends_on:
-      db:
-        condition: service_healthy
-      identity:
-        condition: service_healthy
-      schema:
-        condition: service_healthy
+      - "3000:3000"
+    restart: always
+    # depends_on:
+    #   db:
+    #     condition: service_healthy
+    #   identity:
+    #     condition: service_healthy
+    #   schema:
+    #     condition: service_healthy
     environment:
       - DATABASE_URL=postgres://${POSTGRES_USER}:${POSTGRES_PASSWORD}@db:5432/postgres
       - IDENTITY_BASE_URL=${IDENTITY_BASE_URL}
@@ -92,19 +101,21 @@ services:
       - JWKS_URI=${JWKS_URI}
       - ENABLE_AUTH=${ENABLE_AUTH}
     healthcheck:
-      test: ["CMD-SHELL", "curl -f http://localhost:3000/health || exit 1"]
+      test: ["CMD-SHELL", "curl -f http://localhost:2000/health || exit 1"]
       interval: 10s
       timeout: 5s
       retries: 5
   db:
     image: postgres:12.1-alpine
+    platform: linux/amd64
     ports:
-      - 1072:5432
+      - 1086:5432
+    restart: always
     environment:
       - POSTGRES_USER=${POSTGRES_USER}
       - POSTGRES_PASSWORD=${POSTGRES_PASSWORD}
     volumes:
-      - /Users/wiladmin/Desktop/WIL-sunbird/db:/var/lib/postgresql/data
+      - /home/ubuntu/ALL_VOLUMES/Sunbird-Rc/db:/var/lib/postgresql/data
     healthcheck:
       test: ["CMD-SHELL", "pg_isready -U postgres"]
       interval: 10s
@@ -112,8 +123,10 @@ services:
       retries: 5
   registry:
     image: ghcr.io/sunbird-rc/sunbird-rc-core:${RELEASE_VERSION}
-    volumes:
-      - ./${SCHEMA_DIR}:/home/sunbirdrc/config/public/_schemas
+    platform: linux/amd64
+    restart: always
+    # volumes:
+    #   - ./registry/public/_schemas
     environment:
       - connectionInfo_uri=jdbc:postgresql://db:5432/postgres
       - connectionInfo_username=${POSTGRES_USER}
@@ -134,7 +147,7 @@ services:
       - webhook_enabled=false
       - manager_type=DefinitionsManager
     ports:
-      - "1071:8081"
+      - "8081:8081"
     depends_on:
       db:
         condition: service_healthy
@@ -152,15 +165,20 @@ services:
     build: .
     ports:
       - "1070:80"
-    depends_on:
-      registry:
-        condition: service_healthy
-      identity:
-        condition: service_healthy
-      schema:
-        condition: service_healthy
-      credential:
-        condition: service_healthy
+    restart: always
+    # depends_on:
+      # registry:
+      #   condition: service_healthy
+      # identity:
+      #   condition: service_healthy
+      # schema:
+      #   condition: service_healthy
+      # credential:
+      #   condition: service_healthy
 
-volumes:
-  vault-data:
+#networks:
+#  xplor-network:
+#    external: true
+
+#volumes:
+#  vault-data:
